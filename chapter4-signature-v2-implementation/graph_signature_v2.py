@@ -10,14 +10,14 @@ class NodeSignature:
         neighborCount: int,
         label: Optional[str] = None,
         finalIndex: Optional[int] = None,
-        finishStep: Optional[int] = None,
+        resolutionStep: Optional[int] = None,
         cycleDistance: Optional[int] = None,
         neighbors: Optional[List["NodeSignature"]] = None,
     ):
         self.label: Optional[str] = label
         self.neighborCount: int = neighborCount
         self.finalIndex: Optional[int] = finalIndex
-        self.finishStep: Optional[int] = finishStep
+        self.resolutionStep: Optional[int] = resolutionStep
         self.cycleDistance: Optional[int] = cycleDistance
         self.neighbors: Optional[List["NodeSignature"]] = neighbors
 
@@ -47,7 +47,7 @@ def compare_signatures(sig_a: NodeSignature, sig_b: NodeSignature) -> int:
     if cd_cmp != 0:  # 3. Cycke distance
         return cd_cmp
 
-    fs_cmp = optCompare(sig_a.finishStep, sig_b.finishStep)
+    fs_cmp = optCompare(sig_a.resolutionStep, sig_b.resolutionStep)
     if fs_cmp != 0:  # 4. Finish step
         return fs_cmp
 
@@ -112,7 +112,7 @@ def process_signatures_pass(
 
         if is_unique_from_prev and is_unique_from_next:
             sig.finalIndex = i
-            sig.finishStep = pass_number
+            sig.resolutionStep = pass_number
             made_progress = True
 
     return signatures, made_progress
