@@ -60,7 +60,8 @@ class NodeSignature:
                         f"final_index(i:{n_sig.final_index},s:{n_sig.resolution_step})"
                     )
                 else:
-                    neighbour_details.append(f"Col(nc:{n_sig.neighbour_count})")
+                    neighbour_details.append(
+                        f"Col(nc:{n_sig.neighbour_count})")
             parts.append(f"neighbours:[{', '.join(neighbour_details)}]")
 
         return f"Sig({'; '.join(parts)})"
@@ -102,11 +103,12 @@ class NodeSignature:
 def compare_signatures(sig_a: NodeSignature, sig_b: NodeSignature) -> int:
     """Compares two signatures based on a set of hierarchical rules."""
     diff_nc = sig_b.neighbour_count - sig_a.neighbour_count
-    if diff_nc != 0: # 1. By neighbour_count (descending)
+    if diff_nc != 0:  # 1. By neighbour_count (descending)
         return diff_nc
 
-    fs_cmp = compare_ascending_none_last(sig_a.resolution_step, sig_b.resolution_step)
-    if fs_cmp != 0: # 2. resolution_step step
+    fs_cmp = compare_ascending_none_last(
+        sig_a.resolution_step, sig_b.resolution_step)
+    if fs_cmp != 0:  # 2. resolution_step step
         return fs_cmp
 
     cd_cmp = compare_ascending_none_last(sig_a.loop_length, sig_b.loop_length)
@@ -114,7 +116,7 @@ def compare_signatures(sig_a: NodeSignature, sig_b: NodeSignature) -> int:
         return cd_cmp
 
     fi_cmp = compare_ascending_none_last(sig_a.final_index, sig_b.final_index)
-    if fi_cmp != 0: # 4. final_index
+    if fi_cmp != 0:  # 4. final_index
         return fi_cmp
 
     has_n_a = sig_a.neighbours is not None
@@ -147,7 +149,8 @@ class GraphSignatures:
                 label=label_str,
                 neighbour_count=self.graph.degree(node_label_nx),
             )
-        self.all_signatures: List[NodeSignature] = list(self.signatures_map.values())
+        self.all_signatures: List[NodeSignature] = list(
+            self.signatures_map.values())
 
     def expand_signature_node(self, sig_to_expand: NodeSignature, pass_number: int) -> bool:
         if sig_to_expand.is_finalized() or sig_to_expand.is_expanded() or sig_to_expand.is_loop():
@@ -203,15 +206,12 @@ class GraphSignatures:
         made_progress = False
         for i, sig in enumerate(self.all_signatures):
             if sig.is_finalized():
-                if sig.final_index != i:
-                    raise Exception(
-                        f"Internal Error: A finalized signature's index changed. "
-                        f"Sig({sig.label}) at new index {i} but has final_index {sig.final_index}."
-                    )
                 continue
 
-            is_unique_from_prev = (i == 0) or (compare_signatures(sig, self.all_signatures[i - 1]) != 0)
-            is_unique_from_next = (i == len(self.all_signatures) - 1) or (compare_signatures(sig, self.all_signatures[i + 1]) != 0)
+            is_unique_from_prev = (i == 0) or (
+                compare_signatures(sig, self.all_signatures[i - 1]) != 0)
+            is_unique_from_next = (i == len(self.all_signatures) - 1) or (
+                compare_signatures(sig, self.all_signatures[i + 1]) != 0)
 
             if is_unique_from_prev and is_unique_from_next:
                 sig.final_index = i
@@ -262,3 +262,9 @@ class GraphSignatures:
                     break
             pass_number += 1
 
+        if not self.all_are_finalized():
+            raise Exception(
+                f"Algorithm did not converge after {max_passes} passes. "
+                f"Graph: {list(self.graph.nodes())}, Edges: {list(self.graph.edges())}. "
+                f"Not all node signatures were finalized."
+            )

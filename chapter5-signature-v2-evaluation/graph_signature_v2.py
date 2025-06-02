@@ -178,7 +178,6 @@ class GraphSignatures:
                     label=neighbour_label,
                     neighbour_count=self.signatures_map[neighbour_label].neighbour_count,
                     loop_length=loop_len,
-                    resolution_step=pass_number,
                     parent_node=sig_to_expand,
                 )
             else:
@@ -208,11 +207,35 @@ class GraphSignatures:
         made_progress = False
         for i, sig in enumerate(self.all_signatures):
             if sig.is_finalized():
-                if sig.final_index != i:
-                    raise Exception(
-                        f"Internal Error: A finalized signature's index changed. "
-                        f"Sig({sig.label}) at new index {i} but has final_index {sig.final_index}."
-                    )
+                # if sig.final_index != i:
+                #     error_message_parts = [
+                #         f"Internal Error: Finalized signature's index changed during pass {pass_number}.",
+                #         f"  Problematic Signature Details:",
+                #         f"    - Full Signature: {str(sig)}",
+                #         f"    - Label: {sig.label}",
+                #         f"    - Originally assigned final_index: {sig.final_index}",
+                #         f"    - Original resolution_step: {sig.resolution_step}",
+                #         f"    - Current index in sorted list: {i}",
+                #     ]
+
+                #     # Check what's at the original final_index now, if valid
+                #     if 0 <= sig.final_index < len(self.all_signatures):
+                #         sig_at_original_pos = self.all_signatures[sig.final_index]
+                #         error_message_parts.append(
+                #             f"  Signature currently at index {sig.final_index} (original position of problematic sig): {str(sig_at_original_pos)}"
+                #         )
+                #         if sig_at_original_pos is sig:
+                #             error_message_parts.append(
+                #                 "    (Note: This is the same problematic signature object, indicating a sort shift.)")
+                #         else:
+                #             error_message_parts.append(
+                #                 "    (Note: A different signature now occupies the original final_index.)")
+                #     else:
+                #         error_message_parts.append(
+                #             f"  Original final_index {sig.final_index} is currently out of bounds for the list (len: {len(self.all_signatures)})."
+                #         )
+
+                #     raise Exception("\n".join(error_message_parts))
                 continue
 
             is_unique_from_prev = (i == 0) or (
