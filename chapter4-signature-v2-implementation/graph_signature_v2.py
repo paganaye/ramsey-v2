@@ -1,4 +1,8 @@
-from typing import Dict, List, Optional, Tuple  # Tuple est utilisé par process_pass
+import colorsys
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+# Tuple est utilisé par process_pass
+from typing import Dict, List, Optional, Tuple
 from functools import total_ordering
 
 import networkx as nx
@@ -17,7 +21,8 @@ class NodeSignature:
     def __init__(
         self,
         neighbourCount: int,
-        label: Optional[str] = None,
+        label: str,
+        path: List[str] = [],
         finalIndex: Optional[int] = None,
         resolutionStep: Optional[int] = None,
         cycleDistance: Optional[int] = None,
@@ -61,10 +66,10 @@ class NodeSignature:
 
     def __repr__(self) -> str:
         return (
-            f"NodeSignature(label={self.label!r}, neighbourCount={self.neighbourCount}, "
-            f"finalIndex={self.finalIndex}, resolutionStep={self.resolutionStep}, "
-            f"cycleDistance={self.cycleDistance}, "
-            f"neighboursCount={len(self.neighbours) if self.neighbours is not None else 'None'})"
+            f"NodeSignature(label = {self.label!r}, neighbourCount = {self.neighbourCount}, "
+            f"finalIndex = {self.finalIndex}, resolutionStep = {self.resolutionStep}, "
+            f"cycleDistance = {self.cycleDistance}, "
+            f"neighboursCount = {len(self.neighbours) if self.neighbours is not None else 'None'})"
         )
 
     def isCollapsed(self) -> bool:
@@ -99,11 +104,13 @@ def compare_signatures(sig_a: NodeSignature, sig_b: NodeSignature) -> int:
     if diff_nc != 0:  # 1. By neighbourCount (descending)
         return diff_nc
 
-    fs_cmp = compare_ascending_none_last(sig_a.resolutionStep, sig_b.resolutionStep)
+    fs_cmp = compare_ascending_none_last(
+        sig_a.resolutionStep, sig_b.resolutionStep)
     if fs_cmp != 0:  # 4. ResolutionStep step
         return fs_cmp
 
-    cd_cmp = compare_ascending_none_last(sig_a.cycleDistance, sig_b.cycleDistance)
+    cd_cmp = compare_ascending_none_last(
+        sig_a.cycleDistance, sig_b.cycleDistance)
     if cd_cmp != 0:  # 3. Cycle distance
         return cd_cmp
 
@@ -115,7 +122,8 @@ def compare_signatures(sig_a: NodeSignature, sig_b: NodeSignature) -> int:
     has_n_b = sig_b.neighbours is not None
 
     if has_n_a != has_n_b:
-        return -1 if has_n_a else 1  # The one with neighbours (EXPANDED) comes first
+        # The one with neighbours (EXPANDED) comes first
+        return -1 if has_n_a else 1
 
     if has_n_a and has_n_b:  # 5. Neighbours
         for i in range(sig_a.neighbourCount):
@@ -136,17 +144,18 @@ class GraphSignatures:
         for node_label_nx in self.graph.nodes():
             label_str = str(node_label_nx)
             self.signatures_map[label_str] = NodeSignature(
-                label=label_str, neighbourCount=self.graph.degree(node_label_nx)
+                label=label_str,
+                neighbourCount=self.graph.degree(node_label_nx),
+                path=[],
             )
 
         self.all_signatures: List[NodeSignature] = list(
-            self.signatures_map.values()
-        )
+            self.signatures_map.values())
 
     def expand_signature_node(
         self,
         signature_to_expand: NodeSignature,
-        current_pass_number: int,
+        pass_number: int,
         expansion_path: List[str],
     ) -> bool:
         if (
@@ -160,35 +169,35 @@ class GraphSignatures:
         current_node_label_str = str(signature_to_expand.label)
 
         for neighbour_node_label_nx in self.graph.neighbors(current_node_label_str):
-            neighbour_node_label_str = str(neighbour_node_label_nx)
+            neighbour_label = str(neighbour_node_label_nx)
 
             new_neighbour: NodeSignature
-            if neighbour_node_label_str in expansion_path:
-                cycle_dist = len(expansion_path) - expansion_path.index(
-                    neighbour_node_label_str
-                )
+            if neighbour_label in expansion_path:
+                cycle_dist = len(expansion_path) - \
+                    expansion_path.index(neighbour_label)
 
                 new_neighbour = NodeSignature(
-                    label=neighbour_node_label_str,
-                    neighbourCount=self.signatures_map[
-                        neighbour_node_label_str
-                    ].neighbourCount,
+                    label=neighbour_label,
+                    neighbourCount=self.signatures_map[neighbour_label].neighbourCount,
                     cycleDistance=cycle_dist,
-                    resolutionStep=current_pass_number,
+                    resolutionStep=pass_number,
+                    path=[],  # ...TODO own path + neighbour_label
                 )
             else:
-                neighbour_sig_obj = self.signatures_map[neighbour_node_label_str]
+                neighbour_sig_obj = self.signatures_map[neighbour_label]
                 if neighbour_sig_obj.isFinalized():
                     new_neighbour = NodeSignature(
-                        label=neighbour_node_label_str,
+                        label=neighbour_label,
                         neighbourCount=neighbour_sig_obj.neighbourCount,
                         finalIndex=neighbour_sig_obj.finalIndex,
                         resolutionStep=neighbour_sig_obj.resolutionStep,
+                        path=[],  # ...TODO own path + neighbour_label
                     )
                 else:
                     new_neighbour = NodeSignature(
-                        label=neighbour_node_label_str,
+                        label=neighbour_label,
                         neighbourCount=neighbour_sig_obj.neighbourCount,
+                        path=[],  # ...TODO own path + neighbour_label
                     )
             new_neighbours.append(new_neighbour)
 
@@ -277,9 +286,6 @@ class GraphSignatures:
 # =============================================================================================================================
 # ============  helper functions for this notebook                                                                 ============
 # =============================================================================================================================
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-import colorsys
 
 
 def hsl_color(level: int, max_level: int = 4):

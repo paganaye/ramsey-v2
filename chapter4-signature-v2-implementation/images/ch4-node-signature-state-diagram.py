@@ -1,6 +1,6 @@
 import os
 import sys
-from graphviz import Digraph
+from graphviz import Digraph  # type: ignore
 
 script_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
@@ -8,7 +8,8 @@ script_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 
 dot = Digraph(comment="Signature Object Lifecycle")
 # Style cohérent avec le premier graphe
-dot.attr(rankdir="TB", size="10,8", label="Lifecycle of a Single Signature Object", fontsize="16")
+dot.attr(rankdir="TB", size="10,8",
+         label="Lifecycle of a Single Signature Object", fontsize="16")
 dot.attr('node', fontname="Helvetica", style="filled")
 dot.attr('edge', fontname="Helvetica", fontsize="10")
 
@@ -18,8 +19,10 @@ dot.node("COLLAPSED", "Collapsed", shape="ellipse", fillcolor="lightblue")
 dot.node("EXPANDED", "Expanded", shape="ellipse", fillcolor="lightyellow")
 
 # Définition des états terminaux
-dot.node("FINALIZED", "Unique", shape="doublecircle", color="darkgreen", fillcolor="#A1ECA1", fontcolor="darkgreen", fixedsize="true", width="1.5", height="1.5")
-dot.node("STABLE", "Symmetric", shape="doublecircle", color="darkorange", fillcolor="#FFDAB9", fontcolor="darkorange", fixedsize="true", width="1.5", height="1.5")
+dot.node("FINALIZED", "Unique", shape="doublecircle", color="darkgreen",
+         fillcolor="#A1ECA1", fontcolor="darkgreen", fixedsize="true", width="1.5", height="1.5")
+dot.node("STABLE", "Symmetric", shape="doublecircle", color="darkorange",
+         fillcolor="#FFDAB9", fontcolor="darkorange", fixedsize="true", width="1.5", height="1.5")
 
 # Définition des transitions logiques
 # Depuis l'état Collapsed
@@ -38,7 +41,7 @@ with dot.subgraph() as s:
     s.node("STABLE")
 
 # Rendu du graphe
-output_file = f"{script_name}" # Nom de fichier selon votre dernière version
+output_file = f"{script_name}"  # Nom de fichier selon votre dernière version
 dot.render(output_file, view=False, cleanup=True, format="png")
 
 print(f"Saved signature lifecycle diagram as {output_file}.png")
